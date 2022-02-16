@@ -1,3 +1,4 @@
+# import required libraries
 from tkinter import *
 import tkinter as tk
 from tkinter import ttk
@@ -10,7 +11,7 @@ from babel.numbers import *
 
 LARGE_FONT = ("Verdana", 12)
 
-
+# Initialize GUI using tkinter frames
 class IBApp(tk.Tk):
     def __init__(self, *args, **kwargs):
         tk.Tk.__init__(self, *args, **kwargs)
@@ -36,14 +37,17 @@ class IBApp(tk.Tk):
         frame = self.frames[cont]
         frame.tkraise()
 
-
+# Class representing the home page
 class HomePage(tk.Frame):
+    # Initialize this class in the GUI and display it over the previously displayed page
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
+        # GUI elements such as the label to the page and buttons along the left side of the page
         lbl = tk.Label(self, text="Home Page", font=LARGE_FONT)
         lbl.pack(pady=10, padx=10)
 
+        # These buttons lead to other pages and use lambda functions to do so
         btntodolist = ttk.Button(self, text="To Do List",
                                  command=lambda: controller.show_frame(ToDo))
         btntodolist.pack()
@@ -60,47 +64,58 @@ class HomePage(tk.Frame):
                                    command=lambda: controller.show_frame(Calendarf))
         btntocalendar.pack()
 
-
+# Class that functions as a to do list
 class ToDo(tk.Frame):
+    # Initialize GUI and display it over the previously displayed page
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
         lbl = ttk.Label(self, text="To do List", font=LARGE_FONT)
         lbl.grid(row=0, column=0)
 
+        # Boolean variable to check if needed file exists in the path
         exist = os.path.isfile("tasks.data")
         if exist:
             pass
+        # If the file doesn't exist, it is created and loaded with a 'sample task'
         else:
             with open('tasks.data', 'wb'):
                 pickle.load('[sample task]')
-
+        # If the file exists and has items in it, these are loaded into a list variable
         if os.path.getsize('tasks.data') > 0:
             with open('tasks.data', 'rb') as f:
                 unpickler = pickle.Unpickler(f)
                 tasks = unpickler.load()
+        # If the file is empty, a list variable representing tasks is created
         else:
             tasks = []
 
+        # A function to update the GUI listbox that displays all tasks
         def update_list_box():
             clear_listbox()
             for task in tasks:
                 lb_tasks.insert("end", task)
-
+        
+        # An auxiliary function which deletes all the elements in the GUI listbox
         def clear_listbox():
             lb_tasks.delete(0, "end")
-
+        
+        # When the "Add task" button is pressed, this function is called. 
+        # If an empty task isn't added, it adds the inputted task to the tasks list and updates the GUI
         def add_task():
             task = txt_input.get()
             if task != "":
                 tasks.append(task)
                 update_list_box()
                 update_file()
+                # If an empty input is provided, the user is prompted to type something in before adding
             else:
                 tk.messagebox.showinfo("Information", "Please add a task in the text box to the top right before "
                                                       "you add task")
             txt_input.delete(0, "end")
 
+        # Function to delete a current task. Grabs the currently 'active' element of the GUI and lets the 
+        # user delete the corresponding task, then updating the GUI 
         def del_task():
             task = lb_tasks.get("active")
             confirm = tk.messagebox.askyesno("Please Confirm", "Do you really want to delete this task?")
@@ -112,24 +127,32 @@ class ToDo(tk.Frame):
                 else:
                     tk.messagebox.showinfo("Information", "Please select a task from the list before you do that!")
 
+        # Sorts the list by ascending order, then updates the GUI
         def sort_asc():
             tasks.sort()
             update_list_box()
 
+        # Sorts the list by descending order, then updates the GUI
         def sort_desc():
             tasks.sort()
             tasks.reverse()
             update_list_box()
 
+        # Displays the current number of tasks to the user
         def number_of_tasks():
             num_tasks = str(len(tasks))
             msg = ("Number of tasks: " + num_tasks)
             lbl_Display["text"] = msg
 
+        # Function to update the file that handles all data for this class. 
+        # This is how data is saved so that tasks can be displayed later when the app is reused
         def update_file():
             with open('tasks.data', 'wb') as filehandle:
                 pickle.dump(tasks, filehandle)
 
+        # GUI elements: Label, buttons, a listbox. 
+        # Note: The home page uses pack() to position elements on the display. 
+        # This class uses grid()
         lbl_Display = ttk.Label(self, text="")
         lbl_Display.grid(row=0, column=1)
 
@@ -172,13 +195,17 @@ class ToDo(tk.Frame):
 
         update_list_box()
 
-
+# Class that functions as a timetable
 class Timetable(tk.Frame):
+    # Initialize the GUI 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
+        
+        # Check if required file exists
         exist = os.path.isfile("timetable.data")
         if exist:
             pass
+        # If the file does not exist, create a list with a sample timetable and write this to the file
         else:
             list1 = [["sun1", "sun2", "sun3", "sun4", "sun5", "sun6", "sun7"],
                      ["mon1", "mon2", "mon3", "mon4", "mon5", "mon6", "mon7"],
@@ -188,7 +215,8 @@ class Timetable(tk.Frame):
 
             with open('timetable.data', 'wb') as filehandle:
                 pickle.dump(list1, filehandle)
-
+    
+        # If the file exists, open the file and read its contents into lists, each representing a business day
         with open('timetable.data', 'rb') as filehandle:
             contents = (pickle.load(filehandle))
             sun = contents[0]
@@ -199,6 +227,8 @@ class Timetable(tk.Frame):
             totalrows = len(contents)
             totalcolumns = len(contents[0])
 
+        # Creates a GUI element made up of text entries, displaying the contents of each day from the list
+        # in each textbox. This formation represents a timetable
         def get_all_entry(parent_widget):
             children_widgets = parent_widget.winfo_children()
             read_sub = []
@@ -255,23 +285,29 @@ class Timetable(tk.Frame):
                                    command=lambda: controller.show_frame(Calendarf))
         btntocalendar.grid(row=11, column=2)
 
-
+# Class that represents a user calendar
 class Calendarf(tk.Frame):
+    # Initialize the GUI
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
 
         lbl = ttk.Label(self, text="Calendar")
         lbl.pack()
-
+    
+        # Declare and instantiate required variables:
+        # dates
+        # events
+        # dates and events for the current date
         dates = []
         events = []
         cur_d_e = []
 
-        # check if file exists
+        # Check if the required file with events already exists
         exist = os.path.isfile('dates_events.data')
         if exist:
             pass
         else:
+        # If the file doesn't exist, create one
             with open('dates_events.data', 'wb') as f:
                 pass
 
@@ -280,52 +316,56 @@ class Calendarf(tk.Frame):
             with open('dates_events.data', 'rb') as file:
                 cur_d_e = pickle.load(file)
 
-        # function to add events
+        # Function to add events
         def add_events():
+            # Open new window
             top = tk.Toplevel()
 
-            # create calendar in top window
+            # Display calendar in top window
             cal = Calendar(top, selectmode='day', year=2020, month=8)
             cal.pack(padx=10, pady=10)
 
+            # Function to select a date
             def sel_date():
-                # get date from selector
+                # Get date from selector
                 current_date = cal.get_date()
                 dates.append(current_date)
-                # get event from text input
+                # Get event from text input
                 ev = txt_input.get()
                 events.append(ev)
 
-                # create new list of functions to add to lb and file and global list
+                # Create new list of functions to add to lb and file and global list
                 cur_d_e_f = []
 
-                # concatenate inputs to create new list of combined events, add to function list
+                # Concatenate inputs to create new list of combined events, add to function list
                 cur_d = str(current_date)
                 cur_e = str(ev)
                 curde = (cur_d + ": " + cur_e)
                 cur_d_e_f.append(curde)
 
-                # match global list of events/dates with local function list
+                # Match global list of events/dates with local function list
                 for j in cur_d_e_f:
                     cur_d_e.append(j)
 
                 update_lb()
 
-            # button to add events
+            # Button to add events
             sel_date = ttk.Button(top, text='Add Event', command=sel_date)
             sel_date.pack()
 
-            # text input to enter event
+            # Text input to enter event
             txt_input = tk.Entry(top, width=15)
             txt_input.pack()
 
-        # to update list box. runs whenever program is opened to make it same as global list
+        # Update list box. Runs whenever program is opened to make it same as global list
         def update_lb():
             lb_events.delete(0, "end")
             for y in cur_d_e:
                 lb_events.insert("end", y)
 
+        # Function to delete event from the calendar
         def del_event():
+            # Make sure that the user wants to delete an event. Prevents accidental deletes
             event = lb_events.get("active")
             confirm = tk.messagebox.askyesno("Please confirm", "Are you sure you want to delete this event?")
             if confirm:
@@ -336,6 +376,7 @@ class Calendarf(tk.Frame):
                     tk.messagebox.showinfo("Information",
                                            "Please select an event form the list below before doing that!")
 
+        # Functino to save the current calendar into the corresponding file
         def save():
             with open('dates_events.data', 'wb') as filehandle:
                 pickle.dump(cur_d_e, filehandle)
@@ -368,6 +409,7 @@ class Calendarf(tk.Frame):
         btntohomework.pack()
 
 
+# Class representing a homework function. The implementation is almost identical to the "To Do List" function
 class Homework(tk.Frame):
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
@@ -496,9 +538,6 @@ class Homework(tk.Frame):
         # run the update listbox at least once to make sure that tasks are present when the app is opened
         update_list_box()
 
-        # lbl = ttk.Label(self, text="Homework")
-        # lbl.pack()
-
         btntohome = ttk.Button(self, text="Home Page",
                                command=lambda: controller.show_frame(HomePage))
         btntohome.grid(row=10, column = 1)
@@ -515,6 +554,6 @@ class Homework(tk.Frame):
                                    command=lambda: controller.show_frame(Calendarf))
         btntocalendar.grid(row=13, column = 1)
 
-
+# When the app is opened, run the class app and the GUI class
 app = IBApp()
 app.mainloop()
